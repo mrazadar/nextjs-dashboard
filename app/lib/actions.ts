@@ -3,9 +3,47 @@ import { z } from "zod";
 import postgres from "postgres";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { tr } from "zod/v4/locales";
+
+import { signIn } from "@/auth";
+import { AuthError } from "next-auth";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+
+/**
+ * Auth
+ */
+export async function authenticate(
+  prevState: State | undefined,
+  formData: FormData
+) {
+  try {
+    await signIn("credentials", {
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
+    return { message: "Successfully logged in." };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { message: error.message };
+    }
+    return { message: "Failed to log in." };
+  }
+}
+
+// export async function logout(prevState: State) {
+//   try {
+//     await signIn("credentials", {});
+//     return { message: "Successfully logged out." };
+//   } catch (error) {
+//     if (error instanceof AuthError) {
+//       return { message: error.message };
+//     }
+//   }
+// }
+
+/**
+ * Dashboard Invoices
+ */
 
 const FormSchema = z.object({
   id: z.string(),
